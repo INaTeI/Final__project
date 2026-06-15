@@ -33,7 +33,7 @@ private const val SEARCH_DEBOUNCE_MS = 400L
 private data class RefreshRequest(val force: Boolean = false)
 
 private data class CountriesListSources(
-    val query: String,
+    val filterQuery: String,
     val regionFilter: RegionFilter,
     val allCountries: List<Country>,
     val favouriteCodes: Set<String>,
@@ -97,15 +97,16 @@ class CountriesListViewModel @Inject constructor(
         }
 
     val uiState: StateFlow<CountriesListUiState> = combine(
+        searchQuery,
         combine(
             debouncedSearchQuery,
             preferences.observeRegionFilter(),
             repository.observeCountries(),
             favouritesRepository.observeFavouriteCodes(),
             refreshState
-        ) { query, regionFilter, allCountries, favouriteCodes, requestState ->
+        ) { filterQuery, regionFilter, allCountries, favouriteCodes, requestState ->
             CountriesListSources(
-                query = query,
+                filterQuery = filterQuery,
                 regionFilter = regionFilter,
                 allCountries = allCountries,
                 favouriteCodes = favouriteCodes,
@@ -114,11 +115,14 @@ class CountriesListViewModel @Inject constructor(
         },
         preferences.observeCacheTtl(),
         preferences.observeLastSyncTimestamp()
-    ) { sources, ttl, lastSync ->
+    ) { currentQuery, sources, ttl, lastSync ->
         val filtered = sources.allCountries
             .asSequence()
             .filter { sources.regionFilter.matches(it) }
-            .filter { sources.query.isBlank() || it.name.startsWith(sources.query, ignoreCase = true) }
+            .filter {
+                sources.filterQuery.isBlank() ||
+                        it.name.startsWith(sources.filterQuery, ignoreCase = true)
+            }
             .toList()
 
         val resolvedRequestState = when {
@@ -126,7 +130,7 @@ class CountriesListViewModel @Inject constructor(
                 CountriesRequestState.Loaded
             sources.requestState is CountriesRequestState.Loading && sources.allCountries.isNotEmpty() ->
                 CountriesRequestState.Loaded
-            sources.query.isNotBlank() && filtered.isEmpty() &&
+            sources.filterQuery.isNotBlank() && filtered.isEmpty() &&
                     sources.requestState !is CountriesRequestState.Error ->
                 CountriesRequestState.Empty
             sources.allCountries.isEmpty() && sources.requestState is CountriesRequestState.Loaded ->
@@ -135,7 +139,7 @@ class CountriesListViewModel @Inject constructor(
         }
 
         CountriesListUiState(
-            searchQuery = sources.query,
+            searchQuery = currentQuery,
             regionFilter = sources.regionFilter,
             countries = filtered,
             favouriteCodes = sources.favouriteCodes,
