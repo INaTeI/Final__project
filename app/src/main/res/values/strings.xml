@@ -1,0 +1,7 @@
+<resources>
+    <string name="app_name">Countries Explorer</string>
+    <string name="nav_countries">Страны</string>
+    <string name="nav_collections">Коллекции</string>
+    <string name="nav_history">История</string>
+    <string name="nav_settings">Настройки</string>
+</resources>
