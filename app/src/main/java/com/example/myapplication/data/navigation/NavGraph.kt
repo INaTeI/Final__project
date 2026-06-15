@@ -18,7 +18,7 @@ import com.example.myapplication.domain.preferences.AppPreferences
 import com.example.myapplication.ui.components.MainBottomBar
 import com.example.myapplication.ui.components.MainDestination
 import com.example.myapplication.ui.screens.collections.CollectionDetailScreen
-import com.example.myapplication.ui.screens.collections.CollectionsScreen
+import com.example.myapplication.ui.screens.collections.CollectionsRoute
 import com.example.myapplication.ui.screens.detail.CountryDetailScreen
 import com.example.myapplication.ui.screens.favourites.FavouritesScreen
 import com.example.myapplication.ui.screens.history.HistoryScreen
@@ -90,7 +90,7 @@ fun NavGraph() {
                 }
                 composable(MainDestination.COLLECTIONS.route) {
                     val vm: CollectionsViewModel = hiltViewModel()
-                    CollectionsScreen(
+                    CollectionsRoute(
                         vm = vm,
                         onCollectionClick = { id ->
                             navController.navigate("collection/$id")

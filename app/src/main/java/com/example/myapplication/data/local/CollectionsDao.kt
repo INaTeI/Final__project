@@ -66,4 +66,15 @@ interface CollectionsDao {
 
     @Query("DELETE FROM collection_countries WHERE collectionId = :collectionId")
     suspend fun deleteCountriesOfCollection(collectionId: Long)
+
+    @Query(
+        """
+        DELETE FROM collection_countries
+        WHERE collectionId IN (SELECT id FROM collections WHERE profileId = :profileId)
+        """
+    )
+    suspend fun deleteCountriesForProfileCollections(profileId: Long)
+
+    @Query("DELETE FROM collections WHERE profileId = :profileId")
+    suspend fun deleteAllForProfile(profileId: Long)
 }

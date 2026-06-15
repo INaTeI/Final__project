@@ -8,6 +8,8 @@ import com.example.myapplication.data.local.CollectionsDao
 import com.example.myapplication.data.local.CountriesDao
 import com.example.myapplication.data.local.CountryNotesDao
 import com.example.myapplication.data.local.FavouritesDao
+import com.example.myapplication.data.local.MIGRATION_1_2
+import com.example.myapplication.data.local.MIGRATION_2_3
 import com.example.myapplication.data.local.UserProfilesDao
 import dagger.Module
 import dagger.Provides
@@ -28,7 +30,7 @@ object DatabaseModule {
             AppDatabase::class.java,
             "countries_db"
         )
-            .fallbackToDestructiveMigration()
+            .addMigrations(MIGRATION_1_2, MIGRATION_2_3)
             .build()
     }
 

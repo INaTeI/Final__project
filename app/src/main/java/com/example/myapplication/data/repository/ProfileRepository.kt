@@ -1,5 +1,11 @@
 package com.example.myapplication.data.repository
 
+import androidx.room.withTransaction
+import com.example.myapplication.data.local.AppDatabase
+import com.example.myapplication.data.local.BrowseHistoryDao
+import com.example.myapplication.data.local.CollectionsDao
+import com.example.myapplication.data.local.CountryNotesDao
+import com.example.myapplication.data.local.FavouritesDao
 import com.example.myapplication.data.local.UserProfileEntity
 import com.example.myapplication.data.local.UserProfilesDao
 import com.example.myapplication.domain.model.UserProfile
@@ -11,7 +17,12 @@ import javax.inject.Singleton
 
 @Singleton
 class ProfileRepository @Inject constructor(
+    private val db: AppDatabase,
     private val dao: UserProfilesDao,
+    private val favouritesDao: FavouritesDao,
+    private val historyDao: BrowseHistoryDao,
+    private val collectionsDao: CollectionsDao,
+    private val notesDao: CountryNotesDao,
     private val preferences: AppPreferences
 ) {
 
@@ -58,7 +69,14 @@ class ProfileRepository @Inject constructor(
     suspend fun deleteProfile(profileId: Long) {
         val profiles = dao.getAll()
         if (profiles.size <= 1) return
-        dao.deleteById(profileId)
+        db.withTransaction {
+            favouritesDao.deleteAllForProfile(profileId)
+            notesDao.deleteAllForProfile(profileId)
+            historyDao.clearForProfile(profileId)
+            collectionsDao.deleteCountriesForProfileCollections(profileId)
+            collectionsDao.deleteAllForProfile(profileId)
+            dao.deleteById(profileId)
+        }
         val activeId = preferences.getActiveProfileId()
         if (activeId == profileId) {
             val remaining = dao.getAll().firstOrNull() ?: return

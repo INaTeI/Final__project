@@ -72,8 +72,8 @@ class WorkManagerScheduler @Inject constructor(
     }
 
     companion object {
-        private const val OFFLINE_PRELOAD_WORK = "offline_preload"
-        private const val PERIODIC_CACHE_REFRESH_WORK = "periodic_cache_refresh"
-        private const val IMMEDIATE_REFRESH_WORK = "immediate_cache_refresh"
+        const val OFFLINE_PRELOAD_WORK = "offline_preload"
+        const val PERIODIC_CACHE_REFRESH_WORK = "periodic_cache_refresh"
+        const val IMMEDIATE_REFRESH_WORK = "immediate_cache_refresh"
     }
 }

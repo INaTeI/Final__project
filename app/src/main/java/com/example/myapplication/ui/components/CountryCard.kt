@@ -22,6 +22,7 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.unit.dp
 import coil.compose.rememberAsyncImagePainter
@@ -35,7 +36,9 @@ fun CountryCard(
     onClick: () -> Unit,
     onFavourite: () -> Unit,
     isPinned: Boolean = false,
-    userTag: String? = null
+    userTag: String? = null,
+    actionIcon: ImageVector? = null,
+    actionContentDescription: String = "Favourite"
 ) {
     Card(
         modifier = Modifier
@@ -77,8 +80,12 @@ fun CountryCard(
             }
             IconButton(onClick = onFavourite) {
                 Icon(
-                    imageVector = if (isFavourite) Icons.Default.Favorite else Icons.Default.FavoriteBorder,
-                    contentDescription = "Favourite"
+                    imageVector = actionIcon ?: if (isFavourite) {
+                        Icons.Default.Favorite
+                    } else {
+                        Icons.Default.FavoriteBorder
+                    },
+                    contentDescription = actionContentDescription
                 )
             }
         }

@@ -7,6 +7,7 @@ import com.example.myapplication.data.sync.CachePolicy
 import com.example.myapplication.data.work.WorkManagerScheduler
 import com.example.myapplication.domain.model.CacheTtl
 import com.example.myapplication.domain.model.ThemeMode
+import com.example.myapplication.domain.model.UserProfile
 import com.example.myapplication.domain.preferences.AppPreferences
 import com.example.myapplication.ui.state.SettingsUiState
 import dagger.hilt.android.lifecycle.HiltViewModel
@@ -16,6 +17,14 @@ import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
 import javax.inject.Inject
+
+private data class SettingsSources(
+    val profiles: List<UserProfile>,
+    val activeId: Long?,
+    val theme: ThemeMode,
+    val ttl: CacheTtl,
+    val backgroundSync: Boolean
+)
 
 @HiltViewModel
 class SettingsViewModel @Inject constructor(
@@ -32,25 +41,24 @@ class SettingsViewModel @Inject constructor(
             preferences.observeCacheTtl(),
             preferences.observeBackgroundSyncEnabled()
         ) { profiles, activeId, theme, ttl, backgroundSync ->
-            listOf(profiles, activeId, theme, ttl, backgroundSync)
+            SettingsSources(
+                profiles = profiles,
+                activeId = activeId,
+                theme = theme,
+                ttl = ttl,
+                backgroundSync = backgroundSync
+            )
         },
         preferences.observeLastSyncTimestamp()
-    ) { inner, lastSync ->
-        @Suppress("UNCHECKED_CAST")
-        val profiles = inner[0] as List<com.example.myapplication.domain.model.UserProfile>
-        val activeId = inner[1] as Long?
-        val theme = inner[2] as ThemeMode
-        val ttl = inner[3] as CacheTtl
-        val backgroundSync = inner[4] as Boolean
-
+    ) { sources, lastSync ->
         SettingsUiState(
-            profiles = profiles,
-            activeProfileId = activeId,
-            themeMode = theme,
-            cacheTtl = ttl,
-            backgroundSyncEnabled = backgroundSync,
+            profiles = sources.profiles,
+            activeProfileId = sources.activeId,
+            themeMode = sources.theme,
+            cacheTtl = sources.ttl,
+            backgroundSyncEnabled = sources.backgroundSync,
             lastSyncTimestamp = lastSync,
-            isCacheStale = CachePolicy.isStale(lastSync, ttl)
+            isCacheStale = CachePolicy.isStale(lastSync, sources.ttl)
         )
     }.stateIn(
         scope = viewModelScope,

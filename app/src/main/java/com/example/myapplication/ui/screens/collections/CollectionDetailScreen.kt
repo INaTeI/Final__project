@@ -7,6 +7,7 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.ArrowBack
+import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
@@ -62,7 +63,9 @@ fun CollectionDetailScreen(
                         country = country,
                         isFavourite = false,
                         onClick = { onCountryClick(country.code) },
-                        onFavourite = { vm.removeCountry(country.code) }
+                        onFavourite = { vm.removeCountry(country.code) },
+                        actionIcon = Icons.Default.Delete,
+                        actionContentDescription = "Удалить из коллекции"
                     )
                 }
             }

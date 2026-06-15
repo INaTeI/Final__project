@@ -23,4 +23,7 @@ interface CountryNotesDao {
 
     @Query("DELETE FROM country_notes WHERE profileId = :profileId AND countryCode = :countryCode")
     suspend fun delete(profileId: Long, countryCode: String)
+
+    @Query("DELETE FROM country_notes WHERE profileId = :profileId")
+    suspend fun deleteAllForProfile(profileId: Long)
 }

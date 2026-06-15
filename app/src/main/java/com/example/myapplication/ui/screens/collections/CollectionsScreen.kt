@@ -27,16 +27,34 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import com.example.myapplication.ui.state.CollectionsUiState
 import com.example.myapplication.viewmodel.CollectionsViewModel
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun CollectionsScreen(
+fun CollectionsRoute(
     vm: CollectionsViewModel,
     onCollectionClick: (Long) -> Unit
 ) {
     val state by vm.uiState.collectAsStateWithLifecycle()
+    CollectionsScreen(
+        state = state,
+        onNewCollectionNameChange = vm::updateNewCollectionName,
+        onCreateCollection = vm::createCollection,
+        onDeleteCollection = vm::deleteCollection,
+        onCollectionClick = onCollectionClick
+    )
+}
 
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+fun CollectionsScreen(
+    state: CollectionsUiState,
+    onNewCollectionNameChange: (String) -> Unit,
+    onCreateCollection: () -> Unit,
+    onDeleteCollection: (Long) -> Unit,
+    onCollectionClick: (Long) -> Unit
+) {
     Scaffold(
         topBar = { TopAppBar(title = { Text("Мои коллекции") }) }
     ) { padding ->
@@ -50,12 +68,12 @@ fun CollectionsScreen(
             Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                 OutlinedTextField(
                     value = state.newCollectionName,
-                    onValueChange = vm::updateNewCollectionName,
+                    onValueChange = onNewCollectionNameChange,
                     label = { Text("Название коллекции") },
                     modifier = Modifier.weight(1f)
                 )
                 Button(
-                    onClick = vm::createCollection,
+                    onClick = onCreateCollection,
                     enabled = state.newCollectionName.isNotBlank(),
                     modifier = Modifier.align(Alignment.CenterVertically)
                 ) {
@@ -86,7 +104,7 @@ fun CollectionsScreen(
                                     Text(collection.name)
                                     Text("${collection.countryCount} стран")
                                 }
-                                IconButton(onClick = { vm.deleteCollection(collection.id) }) {
+                                IconButton(onClick = { onDeleteCollection(collection.id) }) {
                                     Icon(Icons.Default.Delete, contentDescription = "Удалить")
                                 }
                             }

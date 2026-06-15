@@ -32,6 +32,14 @@ private const val SEARCH_DEBOUNCE_MS = 400L
 
 private data class RefreshRequest(val force: Boolean = false)
 
+private data class CountriesListSources(
+    val query: String,
+    val regionFilter: RegionFilter,
+    val allCountries: List<Country>,
+    val favouriteCodes: Set<String>,
+    val requestState: CountriesRequestState
+)
+
 @OptIn(FlowPreview::class, ExperimentalCoroutinesApi::class)
 @HiltViewModel
 class CountriesListViewModel @Inject constructor(
@@ -89,45 +97,48 @@ class CountriesListViewModel @Inject constructor(
         }
 
     val uiState: StateFlow<CountriesListUiState> = combine(
-        combine(debouncedSearchQuery, preferences.observeRegionFilter(), repository.observeCountries(), favouritesRepository.observeFavouriteCodes(), refreshState) {
-                query, regionFilter, allCountries, favouriteCodes, requestState ->
-            listOf(query, regionFilter, allCountries, favouriteCodes, requestState)
+        combine(
+            debouncedSearchQuery,
+            preferences.observeRegionFilter(),
+            repository.observeCountries(),
+            favouritesRepository.observeFavouriteCodes(),
+            refreshState
+        ) { query, regionFilter, allCountries, favouriteCodes, requestState ->
+            CountriesListSources(
+                query = query,
+                regionFilter = regionFilter,
+                allCountries = allCountries,
+                favouriteCodes = favouriteCodes,
+                requestState = requestState
+            )
         },
         preferences.observeCacheTtl(),
         preferences.observeLastSyncTimestamp()
-    ) { inner, ttl, lastSync ->
-        val query          = inner[0] as String
-        val regionFilter   = inner[1] as RegionFilter
-        @Suppress("UNCHECKED_CAST")
-        val allCountries   = inner[2] as List<Country>
-        @Suppress("UNCHECKED_CAST")
-        val favouriteCodes = inner[3] as Set<String>
-        val requestState   = inner[4] as CountriesRequestState
-
-        val filtered = allCountries
+    ) { sources, ttl, lastSync ->
+        val filtered = sources.allCountries
             .asSequence()
-            .filter { regionFilter.matches(it) }
-            .filter { query.isBlank() || it.name.startsWith(query, ignoreCase = true) }
+            .filter { sources.regionFilter.matches(it) }
+            .filter { sources.query.isBlank() || it.name.startsWith(sources.query, ignoreCase = true) }
             .toList()
 
         val resolvedRequestState = when {
-            requestState is CountriesRequestState.Error && allCountries.isNotEmpty() ->
+            sources.requestState is CountriesRequestState.Error && sources.allCountries.isNotEmpty() ->
                 CountriesRequestState.Loaded
-            requestState is CountriesRequestState.Loading && allCountries.isNotEmpty() ->
+            sources.requestState is CountriesRequestState.Loading && sources.allCountries.isNotEmpty() ->
                 CountriesRequestState.Loaded
-            query.isNotBlank() && filtered.isEmpty() &&
-                    requestState !is CountriesRequestState.Error ->
+            sources.query.isNotBlank() && filtered.isEmpty() &&
+                    sources.requestState !is CountriesRequestState.Error ->
                 CountriesRequestState.Empty
-            allCountries.isEmpty() && requestState is CountriesRequestState.Loaded ->
+            sources.allCountries.isEmpty() && sources.requestState is CountriesRequestState.Loaded ->
                 CountriesRequestState.Empty
-            else -> requestState
+            else -> sources.requestState
         }
 
         CountriesListUiState(
-            searchQuery = query,
-            regionFilter = regionFilter,
+            searchQuery = sources.query,
+            regionFilter = sources.regionFilter,
             countries = filtered,
-            favouriteCodes = favouriteCodes,
+            favouriteCodes = sources.favouriteCodes,
             requestState = resolvedRequestState,
             isCacheStale = CachePolicy.isStale(lastSync, ttl)
         )

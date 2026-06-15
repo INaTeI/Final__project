@@ -28,9 +28,6 @@ import androidx.compose.material3.TextField
 import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
-import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.testTag
@@ -52,7 +49,6 @@ fun CountryListScreen(
     vm: CountriesListViewModel
 ) {
     val state by vm.uiState.collectAsStateWithLifecycle()
-    var query by remember { mutableStateOf("") }
 
     Scaffold(
         topBar = {
@@ -81,11 +77,8 @@ fun CountryListScreen(
             }
 
             TextField(
-                value = query,
-                onValueChange = {
-                    query = it
-                    vm.search(it)
-                },
+                value = state.searchQuery,
+                onValueChange = vm::search,
                 modifier = Modifier
                     .fillMaxWidth()
                     .padding(8.dp)
