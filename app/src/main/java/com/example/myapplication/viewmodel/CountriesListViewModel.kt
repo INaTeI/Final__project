@@ -40,6 +40,12 @@ private data class CountriesListSources(
     val requestState: CountriesRequestState
 )
 
+private val countrySearchAliases = mapOf(
+    "US" to listOf("usa", "america", "united states", "united states of america"),
+    "GB" to listOf("uk", "great britain", "britain", "united kingdom"),
+    "AE" to listOf("uae", "united arab emirates")
+)
+
 @OptIn(FlowPreview::class, ExperimentalCoroutinesApi::class)
 @HiltViewModel
 class CountriesListViewModel @Inject constructor(
@@ -119,10 +125,7 @@ class CountriesListViewModel @Inject constructor(
         val filtered = sources.allCountries
             .asSequence()
             .filter { sources.regionFilter.matches(it) }
-            .filter {
-                sources.filterQuery.isBlank() ||
-                        it.name.startsWith(sources.filterQuery, ignoreCase = true)
-            }
+            .filter { it.matchesSearch(sources.filterQuery) }
             .toList()
 
         val resolvedRequestState = when {
@@ -175,4 +178,22 @@ class CountriesListViewModel @Inject constructor(
             }
         }
     }
+
+    private fun Country.matchesSearch(query: String): Boolean {
+        val normalizedQuery = query.normalizedForSearch()
+        if (normalizedQuery.isBlank()) return true
+
+        val normalizedName = name.normalizedForSearch()
+        val normalizedCode = code.normalizedForSearch()
+        val aliases = countrySearchAliases[code.uppercase()].orEmpty()
+
+        return normalizedName.contains(normalizedQuery) ||
+                normalizedCode == normalizedQuery ||
+                aliases.any { it.normalizedForSearch().contains(normalizedQuery) }
+    }
+
+    private fun String.normalizedForSearch(): String =
+        lowercase()
+            .replace(".", "")
+            .trim()
 }
