@@ -16,8 +16,6 @@ import javax.inject.Singleton
 class WorkManagerScheduler @Inject constructor(
     @dagger.hilt.android.qualifiers.ApplicationContext private val context: Context
 ) {
-    private val workManager = WorkManager.getInstance(context)
-
     fun scheduleOfflinePreload() {
         val request = OneTimeWorkRequestBuilder<OfflinePreloadWorker>()
             .setConstraints(
@@ -27,7 +25,7 @@ class WorkManagerScheduler @Inject constructor(
             )
             .build()
 
-        workManager.enqueueUniqueWork(
+        WorkManager.getInstance(context).enqueueUniqueWork(
             OFFLINE_PRELOAD_WORK,
             ExistingWorkPolicy.KEEP,
             request
@@ -36,7 +34,7 @@ class WorkManagerScheduler @Inject constructor(
 
     fun schedulePeriodicCacheRefresh(enabled: Boolean) {
         if (!enabled) {
-            workManager.cancelUniqueWork(PERIODIC_CACHE_REFRESH_WORK)
+            WorkManager.getInstance(context).cancelUniqueWork(PERIODIC_CACHE_REFRESH_WORK)
             return
         }
 
@@ -48,7 +46,7 @@ class WorkManagerScheduler @Inject constructor(
             )
             .build()
 
-        workManager.enqueueUniquePeriodicWork(
+        WorkManager.getInstance(context).enqueueUniquePeriodicWork(
             PERIODIC_CACHE_REFRESH_WORK,
             ExistingPeriodicWorkPolicy.UPDATE,
             request
@@ -64,7 +62,7 @@ class WorkManagerScheduler @Inject constructor(
             )
             .build()
 
-        workManager.enqueueUniqueWork(
+        WorkManager.getInstance(context).enqueueUniqueWork(
             IMMEDIATE_REFRESH_WORK,
             ExistingWorkPolicy.REPLACE,
             request
